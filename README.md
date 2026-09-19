@@ -50,3 +50,28 @@
 
 1. 新建仓库，建议命名 `mh-refine-stargazing`
 2. 把以下文件放到仓库根目录：
+index.html
+manifest.json
+sw.js
+icons/
+icon-192.png
+icon-512.png
+
+3. Settings → Pages → Source 选 `main` 分支 `/ (root)`
+4. 访问 `https://你的用户名.github.io/mh-refine-stargazing/`
+
+### 图标
+
+需要准备两张 PNG 图标：
+
+- `icons/icon-192.png`（192×192）
+- `icons/icon-512.png`（512×512）
+
+可以用游戏截图，也可以自己画一个。
+
+### 更新代码后
+
+改了 `index.html` 等文件后，记得把 `sw.js` 里的版本号加一：
+
+```javascript
+const CACHE_NAME = 'mh-refine-v1'; // 改成 v2、v3...
