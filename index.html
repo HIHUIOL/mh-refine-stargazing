@@ -5,18 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1a1f2b">
 
-  <!-- 基础 SEO -->
   <title>炼化观星记录 · 怪物猎人装备炼化助手</title>
   <meta name="description" content="怪物猎人装备炼化观星记录工具，自动计算停止金币、停手次数、所在次数与炼化时长，支持分享导入。">
 
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="炼化观星记录">
 
-  <!-- 微信 / QQ 分享卡片 -->
   <meta property="og:title" content="炼化观星记录">
   <meta property="og:description" content="怪物猎人装备炼化观星助手，自动算停止金币、停手次数、炼化时长">
   <meta property="og:url" content="https://hihuiol.github.io/mh-refine-stargazing/">
@@ -133,6 +130,12 @@
     .param-item input::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
+    }
+
+    .param-item input::placeholder {
+      color: #4a5e72;
+      font-size: 0.8rem;
+      font-weight: 400;
     }
 
     .add-section {
@@ -939,9 +942,15 @@
   <div class="params-panel">
     <div class="param-row">
       <div class="param-item">
-        <label>💰 当前金币数</label>
+        <label>💰 观星时金币</label>
         <input type="number" id="goldInput" value="99999999" min="0" step="100">
       </div>
+      <div class="param-item">
+        <label>💰 开炼时金币</label>
+        <input type="number" id="startGoldInput" placeholder="留空则同观星时" min="0" step="100">
+      </div>
+    </div>
+    <div class="param-row">
       <div class="param-item">
         <label>⚡ 每次炼化金币</label>
         <input type="number" id="perRefineGold" value="4000" min="1" step="100">
@@ -1054,10 +1063,11 @@
 
 <script>
   (function() {
-    const STORAGE_KEY = 'mh_refine_stargazing_v8';
+    const STORAGE_KEY = 'mh_refine_stargazing_v10';
     const CHECKBOX_KEY = 'mh_calibrate_checkbox';
     const DEFAULT_PARAMS = {
       gold: 99999999,
+      startGold: '',
       perRefineGold: 4000,
       refinePerMinute: 62
     };
@@ -1071,6 +1081,7 @@
     let checkboxChecked = false;
 
     const goldInput = document.getElementById('goldInput');
+    const startGoldInput = document.getElementById('startGoldInput');
     const perRefineGoldInput = document.getElementById('perRefineGold');
     const refinePerMinuteInput = document.getElementById('refinePerMinute');
 
@@ -1153,10 +1164,13 @@
 
     function getParams() {
       const baseGold = parseFloat(goldInput.value) || 0;
+      const startGoldRaw = startGoldInput.value.trim();
+      const startGold = startGoldRaw === '' ? baseGold : (parseFloat(startGoldRaw) || 0);
       const perGold = parseFloat(perRefineGoldInput.value) || 1;
       const perMinute = parseFloat(refinePerMinuteInput.value) || 1;
       return {
         baseGold: Math.max(0, baseGold),
+        startGold: Math.max(0, startGold),
         perGold: Math.max(1, perGold),
         perMinute: Math.max(1, perMinute)
       };
@@ -1207,6 +1221,7 @@
     function exportData() {
       const params = [
         parseFloat(goldInput.value) || 0,
+        startGoldInput.value.trim() === '' ? null : (parseFloat(startGoldInput.value) || 0),
         parseFloat(perRefineGoldInput.value) || 4000,
         parseFloat(refinePerMinuteInput.value) || 62
       ];
@@ -1256,8 +1271,13 @@
 
         if (Array.isArray(params)) {
           if (params[0] !== undefined) goldInput.value = params[0];
-          if (params[1] !== undefined) perRefineGoldInput.value = params[1];
-          if (params[2] !== undefined) refinePerMinuteInput.value = params[2];
+          if (params[1] !== undefined && params[1] !== null) {
+            startGoldInput.value = params[1];
+          } else {
+            startGoldInput.value = '';
+          }
+          if (params[2] !== undefined) perRefineGoldInput.value = params[2];
+          if (params[3] !== undefined) refinePerMinuteInput.value = params[3];
         }
 
         if (Array.isArray(eqs)) {
@@ -1293,7 +1313,8 @@
       }
     }
 
-    function computeMetrics(equipList, baseGold, perGold, perMinute) {
+    // 核心计算
+    function computeMetrics(equipList, baseGold, startGold, perGold, perMinute) {
       const result = [];
       if (!equipList.length) return result;
 
@@ -1314,12 +1335,17 @@
         }
       }
 
+      // 先算出所有装备的所在次数（用观星时金币）
+      const positions = sorted.map(eq => (baseGold - eq.gold) / perGold);
+
       for (let i = 0; i < sorted.length; i++) {
         const eq = sorted[i];
         const isProgress = i === progressIndex;
 
-        const position = (baseGold - eq.gold) / perGold;
+        // 所在次数：用观星时金币
+        const position = positions[i];
 
+        // 停止金币
         let stopGold;
         let isCalibratedDisplay = false;
 
@@ -1330,15 +1356,18 @@
           const dist = calibrationEqGold - eq.gold;
           stopGold = calibrationGold - dist + perGold;
         } else {
-          stopGold = eq.gold + perGold;
+          // 用开炼时金币平移
+          const distFromBase = baseGold - eq.gold;
+          stopGold = startGold - distFromBase + perGold;
         }
 
+        // 停手次数：用所在次数差算（不受开炼/校准影响）
         let refineCount;
         if (i === 0) {
-          refineCount = Math.max(0, (baseGold - eq.gold) / perGold - 1);
+          refineCount = Math.max(0, position - 1);
         } else {
-          const prevEq = sorted[i-1];
-          refineCount = Math.max(0, (prevEq.gold - eq.gold) / perGold - 1);
+          const prevPosition = positions[i-1];
+          refineCount = Math.max(0, position - prevPosition - 1);
         }
 
         const minutes = refineCount / perMinute;
@@ -1363,6 +1392,7 @@
           equipments: equipments,
           params: {
             gold: goldInput.value,
+            startGold: startGoldInput.value,
             perRefineGold: perRefineGoldInput.value,
             refinePerMinute: refinePerMinuteInput.value
           },
@@ -1380,6 +1410,7 @@
         if (data.equipments && Array.isArray(data.equipments)) equipments = data.equipments;
         if (data.params) {
           if (data.params.gold !== undefined) goldInput.value = data.params.gold;
+          if (data.params.startGold !== undefined) startGoldInput.value = data.params.startGold;
           if (data.params.perRefineGold !== undefined) perRefineGoldInput.value = data.params.perRefineGold;
           if (data.params.refinePerMinute !== undefined) refinePerMinuteInput.value = data.params.refinePerMinute;
         }
@@ -1391,6 +1422,7 @@
     function resetAll() {
       if (!confirm('确定要重置所有数据吗？')) return;
       goldInput.value = DEFAULT_PARAMS.gold;
+      startGoldInput.value = DEFAULT_PARAMS.startGold;
       perRefineGoldInput.value = DEFAULT_PARAMS.perRefineGold;
       refinePerMinuteInput.value = DEFAULT_PARAMS.refinePerMinute;
       equipments = [];
@@ -1403,10 +1435,10 @@
     }
 
     function render() {
-      const { baseGold, perGold, perMinute } = getParams();
+      const { baseGold, startGold, perGold, perMinute } = getParams();
       equipments.sort((a, b) => b.gold - a.gold);
 
-      const computedList = computeMetrics(equipments, baseGold, perGold, perMinute);
+      const computedList = computeMetrics(equipments, baseGold, startGold, perGold, perMinute);
 
       if (computedList.length === 0) {
         equipmentList.innerHTML = `<div class="empty-state">✨ 还没有装备记录，点击上方添加</div>`;
@@ -1578,7 +1610,7 @@
       calibratingId = id;
       const isCurrent = currentProgressId === id;
 
-      const { baseGold, perGold } = getParams();
+      const { baseGold, startGold, perGold } = getParams();
 
       if (isCurrent && eq.calibratedGold !== undefined) {
         calibrateDesc.innerHTML = `
@@ -1588,7 +1620,7 @@
         `;
         calibrateBaseDefault = eq.calibratedGold;
       } else {
-        const computed = computeMetrics(equipments, baseGold, perGold, 1);
+        const computed = computeMetrics(equipments, baseGold, startGold, perGold, 1);
         const item = computed.find(c => c.id === id);
         const defaultStopGold = item ? item.stopGold : (eq.gold + perGold);
 
@@ -1706,7 +1738,7 @@
     }
 
     function setupParamListeners() {
-      [goldInput, perRefineGoldInput, refinePerMinuteInput].forEach(input => {
+      [goldInput, startGoldInput, perRefineGoldInput, refinePerMinuteInput].forEach(input => {
         input.addEventListener('input', render);
         input.addEventListener('change', render);
       });
@@ -1769,7 +1801,6 @@
 
     init();
 
-    // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')

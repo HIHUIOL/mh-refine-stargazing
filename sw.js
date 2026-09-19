@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mh-refine-v1';
+const CACHE_NAME = 'mh-refine-v1.1';
 const ASSETS = [
   './',
   './index.html',
