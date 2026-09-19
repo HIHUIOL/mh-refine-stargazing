@@ -623,7 +623,7 @@
       flex-wrap: wrap;
     }
 
-    .btn-reset, .btn-share, .btn-import {
+    .btn-reset, .btn-share, .btn-import, .btn-help {
       background: transparent;
       border-radius: 40px;
       padding: 8px 18px;
@@ -667,7 +667,18 @@
       color: #8effa8;
     }
 
-    .btn-reset:active, .btn-share:active, .btn-import:active {
+    .btn-help {
+      border: 2px solid #4e4a2e;
+      color: #d9c87a;
+    }
+
+    .btn-help:hover {
+      background: #3a3520;
+      border-color: #b3a34e;
+      color: #ffe98e;
+    }
+
+    .btn-reset:active, .btn-share:active, .btn-import:active, .btn-help:active {
       transform: scale(0.96);
     }
 
@@ -725,6 +736,8 @@
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
       transform: scale(0.95);
       transition: transform 0.2s;
+      max-height: 85vh;
+      overflow-y: auto;
     }
 
     .modal-overlay.show .modal-box {
@@ -925,6 +938,65 @@
       transform: translateY(3px);
       box-shadow: 0 1px 0 #2e5a3e;
     }
+
+    /* 帮助内容样式 */
+    .help-section {
+      margin-bottom: 20px;
+    }
+
+    .help-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .help-section h4 {
+      font-size: 0.95rem;
+      color: #f0c45a;
+      margin-bottom: 8px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .help-section p {
+      font-size: 0.85rem;
+      color: #b8d0e0;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    .help-section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .help-section li {
+      font-size: 0.85rem;
+      color: #b8d0e0;
+      line-height: 1.7;
+      padding-left: 16px;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .help-section li::before {
+      content: "·";
+      position: absolute;
+      left: 4px;
+      color: #e6b422;
+      font-weight: 700;
+    }
+
+    .help-section .highlight {
+      color: #f0c45a;
+      font-weight: 600;
+    }
+
+    .help-divider {
+      height: 1px;
+      background: #2e3e4e;
+      margin: 16px 0;
+    }
   </style>
 </head>
 <body>
@@ -934,6 +1006,7 @@
   </h1>
 
   <div class="top-actions">
+    <button class="btn-help" id="helpBtn">❓ 帮助</button>
     <button class="btn-share" id="shareBtn">📤 分享</button>
     <button class="btn-import" id="importBtn">📥 读取</button>
     <button class="btn-reset" id="resetBtn">🔄 重置全部</button>
@@ -1061,6 +1134,90 @@
   </div>
 </div>
 
+<!-- 帮助弹窗 -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal-box" style="max-width: 460px;">
+    <h3>❓ 使用帮助</h3>
+    <div class="modal-desc">
+      这是一个怪物猎人装备炼化的观星记录工具。下面详细说明各功能。
+    </div>
+
+    <div class="help-section">
+      <h4>💰 参数区</h4>
+      <ul>
+        <li><span class="highlight">观星时金币</span>：观星那一刻手里的金币，用来算每件装备的「所在次数」。</li>
+        <li><span class="highlight">开炼时金币</span>：实际开始炼化那一刻手里的金币。如果和观星时一样，留空即可。填了之后，停止金币会按新起点重算。</li>
+        <li><span class="highlight">每次炼化金币</span>：游戏里单次炼化消耗的金币。</li>
+        <li><span class="highlight">每分钟炼化次数</span>：你实际每分钟能炼几次，用来换算总时长。</li>
+      </ul>
+    </div>
+
+    <div class="help-divider"></div>
+
+    <div class="help-section">
+      <h4>➕ 添加装备</h4>
+      <ul>
+        <li><span class="highlight">出技能时金币数</span>：观星时记录的这个技能出现时，你手里的金币数。</li>
+        <li><span class="highlight">技能名</span>：比如「攻击」「看破」，可以留空。</li>
+        <li><span class="highlight">目标装备</span>：比如「堕天头」「钢龙胸」，可以留空。</li>
+      </ul>
+      <p>添加后会自动按金币数从高到低排序。</p>
+    </div>
+
+    <div class="help-divider"></div>
+
+    <div class="help-section">
+      <h4>📊 每件装备显示的字段</h4>
+      <ul>
+        <li><span class="highlight">停止金币</span>：金币降到这个数就停手，下一次炼化就会出这个技能。</li>
+        <li><span class="highlight">所在次数</span>：这件装备在整场观星中第几次出现。用观星时金币算，不受校准影响。</li>
+        <li><span class="highlight">停手次数</span>：从上一件装备到这件，需要炼几次后停手。用所在次数差算，不受校准影响。</li>
+        <li><span class="highlight">时间</span>：停手次数换算成时长。</li>
+      </ul>
+    </div>
+
+    <div class="help-divider"></div>
+
+    <div class="help-section">
+      <h4>📍 校准进度</h4>
+      <p>如果中途金币变了（做装备、卖素材等），点装备卡片上的 📍，填入当前实际金币数。校准后：</p>
+      <ul>
+        <li>这件装备标记为「当前进度」</li>
+        <li>它之后的装备停止金币会按新金币重算</li>
+        <li>停手次数和所在次数不受影响，保持稳定</li>
+        <li>再点另一件的 📍，会自动取消之前的校准</li>
+      </ul>
+      <p>弹窗里有个「减 2000」的勾选框，勾上后输入框默认值会减 2000，方便快速调整。勾选状态会记住。</p>
+    </div>
+
+    <div class="help-divider"></div>
+
+    <div class="help-section">
+      <h4>📤 分享 / 📥 读取</h4>
+      <ul>
+        <li><span class="highlight">分享</span>：生成一段短分享码，复制发给别人或另一台设备。</li>
+        <li><span class="highlight">读取</span>：粘贴分享码，导入数据，覆盖当前记录。</li>
+      </ul>
+      <p>换设备、备份数据都可以用这个。</p>
+    </div>
+
+    <div class="help-divider"></div>
+
+    <div class="help-section">
+      <h4>💡 小提示</h4>
+      <ul>
+        <li>数据自动保存在浏览器本地，关页面不会丢。</li>
+        <li>可以安装到手机主屏，像 App 一样全屏打开。</li>
+        <li>清除浏览器站点数据会丢失记录，建议定期用分享码备份。</li>
+      </ul>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn-cancel" id="helpClose">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
   (function() {
     const STORAGE_KEY = 'mh_refine_stargazing_v10';
@@ -1092,6 +1249,7 @@
     const resetBtn = document.getElementById('resetBtn');
     const shareBtn = document.getElementById('shareBtn');
     const importBtn = document.getElementById('importBtn');
+    const helpBtn = document.getElementById('helpBtn');
 
     const equipmentList = document.getElementById('equipmentList');
     const totalMinutesBadge = document.getElementById('totalMinutesBadge');
@@ -1116,6 +1274,9 @@
     const importText = document.getElementById('importText');
     const importCancel = document.getElementById('importCancel');
     const importConfirm = document.getElementById('importConfirm');
+
+    const helpModal = document.getElementById('helpModal');
+    const helpClose = document.getElementById('helpClose');
 
     let calibrateBaseDefault = 0;
 
@@ -1313,7 +1474,6 @@
       }
     }
 
-    // 核心计算
     function computeMetrics(equipList, baseGold, startGold, perGold, perMinute) {
       const result = [];
       if (!equipList.length) return result;
@@ -1335,17 +1495,14 @@
         }
       }
 
-      // 先算出所有装备的所在次数（用观星时金币）
       const positions = sorted.map(eq => (baseGold - eq.gold) / perGold);
 
       for (let i = 0; i < sorted.length; i++) {
         const eq = sorted[i];
         const isProgress = i === progressIndex;
 
-        // 所在次数：用观星时金币
         const position = positions[i];
 
-        // 停止金币
         let stopGold;
         let isCalibratedDisplay = false;
 
@@ -1356,12 +1513,10 @@
           const dist = calibrationEqGold - eq.gold;
           stopGold = calibrationGold - dist + perGold;
         } else {
-          // 用开炼时金币平移
           const distFromBase = baseGold - eq.gold;
           stopGold = startGold - distFromBase + perGold;
         }
 
-        // 停手次数：用所在次数差算（不受开炼/校准影响）
         let refineCount;
         if (i === 0) {
           refineCount = Math.max(0, position - 1);
@@ -1737,6 +1892,14 @@
       }
     }
 
+    function openHelpModal() {
+      helpModal.classList.add('show');
+    }
+
+    function closeHelpModal() {
+      helpModal.classList.remove('show');
+    }
+
     function setupParamListeners() {
       [goldInput, startGoldInput, perRefineGoldInput, refinePerMinuteInput].forEach(input => {
         input.addEventListener('input', render);
@@ -1748,6 +1911,7 @@
     resetBtn.addEventListener('click', resetAll);
     shareBtn.addEventListener('click', openShareModal);
     importBtn.addEventListener('click', openImportModal);
+    helpBtn.addEventListener('click', openHelpModal);
 
     [addGold, addSkill, addTarget].forEach(input => {
       input.addEventListener('keypress', (e) => {
@@ -1787,6 +1951,9 @@
     importCancel.addEventListener('click', closeImportModal);
     importModal.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
     importConfirm.addEventListener('click', doImport);
+
+    helpClose.addEventListener('click', closeHelpModal);
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) closeHelpModal(); });
 
     document.addEventListener('click', (e) => {
       if (editingId && !e.target.closest('.equip-card')) { editingId = null; render(); }
