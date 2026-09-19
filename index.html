@@ -939,7 +939,6 @@
       box-shadow: 0 1px 0 #2e5a3e;
     }
 
-    /* 帮助内容样式 */
     .help-section {
       margin-bottom: 20px;
     }
@@ -1793,7 +1792,7 @@
 
       calibrateRemove.style.display = isCurrent ? 'block' : 'none';
       calibrateModal.classList.add('show');
-      setTimeout(() => calibrateGoldInput.focus(), 100);
+      // 不自动聚焦，避免手机弹键盘
     }
 
     function closeCalibrateModal() {
@@ -1856,10 +1855,7 @@
       const code = exportData();
       shareText.value = code;
       shareModal.classList.add('show');
-      setTimeout(() => {
-        shareText.focus();
-        shareText.select();
-      }, 100);
+      // 不自动聚焦
     }
 
     function closeShareModal() {
@@ -1869,7 +1865,7 @@
     function openImportModal() {
       importText.value = '';
       importModal.classList.add('show');
-      setTimeout(() => importText.focus(), 100);
+      // 不自动聚焦
     }
 
     function closeImportModal() {
