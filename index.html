@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1f2b">
+
+  <!-- 基础 SEO -->
+  <title>炼化观星记录 · 怪物猎人装备炼化助手</title>
+  <meta name="description" content="怪物猎人装备炼化观星记录工具，自动计算停止金币、停手次数、所在次数与炼化时长，支持分享导入。">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-512.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="炼化观星记录">
+
+  <!-- 微信 / QQ 分享卡片 -->
+  <meta property="og:title" content="炼化观星记录">
+  <meta property="og:description" content="怪物猎人装备炼化观星助手，自动算停止金币、停手次数、炼化时长">
+  <meta property="og:url" content="https://hihuiol.github.io/mh-refine-stargazing/">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://hihuiol.github.io/mh-refine-stargazing/icons/icon-512.png">
+  <meta name="wx.share.title" content="炼化观星记录">
+  <meta name="wx.share.desc" content="怪物猎人装备炼化观星助手，自动算停止金币、停手次数、炼化时长">
+  <meta name="wx.share.img" content="https://hihuiol.github.io/mh-refine-stargazing/icons/icon-512.png">
+  <meta name="qq:share:image" content="https://hihuiol.github.io/mh-refine-stargazing/icons/icon-512.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #0e1219;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: #e8eef2;
+      padding: 16px 12px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .app-container {
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      color: #f0e6d2;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+      border-bottom: 2px solid #3a4a5a;
+      padding-bottom: 12px;
+    }
+
+    h1 span {
+      font-size: 1.8rem;
+    }
+
+    .params-panel {
+      background: #1e2632;
+      border-radius: 24px;
+      padding: 20px 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 0 #0b0f14, 0 10px 20px rgba(0, 0, 0, 0.5);
+      border: 1px solid #34495e;
+    }
+
+    .param-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .param-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .param-item {
+      flex: 1 1 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .param-item label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9aaec2;
+      font-weight: 500;
+      padding-left: 6px;
+    }
+
+    .param-item input {
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #f0e6d2;
+      width: 100%;
+      outline: none;
+      transition: border 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+
+    .param-item input:focus {
+      border-color: #e6b422;
+      box-shadow: 0 0 0 3px rgba(230, 180, 34, 0.2);
+    }
+
+    .param-item input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .param-item input::-webkit-outer-spin-button,
+    .param-item input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .add-section {
+      background: #1e2632;
+      border-radius: 24px;
+      padding: 20px 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 0 #0b0f14, 0 8px 16px rgba(0, 0, 0, 0.5);
+      border: 1px solid #34495e;
+    }
+
+    .add-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #b0c4d9;
+      margin-bottom: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .add-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #2e3e4e;
+    }
+
+    .add-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .add-grid .input-group {
+      flex: 1 1 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .add-grid .input-group label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #9aaec2;
+      padding-left: 6px;
+    }
+
+    .add-grid .input-group input {
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #f0e6d2;
+      outline: none;
+      width: 100%;
+    }
+
+    .add-grid .input-group input:focus {
+      border-color: #e6b422;
+    }
+
+    .add-grid .input-group input::placeholder {
+      color: #4a5e72;
+      font-size: 0.85rem;
+    }
+
+    .btn-add {
+      background: #e6b422;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 28px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1a1f2b;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #8f6f1a, 0 6px 12px black;
+      transition: all 0.08s linear;
+      flex: 0 0 auto;
+      height: fit-content;
+      margin-left: auto;
+      font-family: inherit;
+      border: 1px solid #ffd966;
+    }
+
+    .btn-add:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #8f6f1a, 0 6px 12px black;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 0 4px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .list-header h2 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #d6e2ed;
+    }
+
+    .list-header .stats-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .list-header .stats-badge {
+      background: #2e3e4e;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #f0e6d2;
+      border: 1px solid #4a627a;
+    }
+
+    .list-header .stats-badge.highlight {
+      background: #3a2e1a;
+      border-color: #e6b422;
+      color: #f0c45a;
+    }
+
+    .equipment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .equip-card {
+      background: #1a212c;
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 6px solid #3a4e62;
+      box-shadow: 0 3px 0 #0b0f14, 0 4px 10px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s;
+      border: 1px solid #2e3e4e;
+      border-left-width: 6px;
+      border-left-color: #3a4e62;
+    }
+
+    .equip-card.current {
+      border-left-color: #e6b422;
+      background: #1e2a1e;
+      box-shadow: 0 3px 0 #0b0f14, 0 0 20px rgba(230, 180, 34, 0.15);
+    }
+
+    .equip-card.editing {
+      border-left-color: #5aa9e6;
+      background: #1e2b3a;
+    }
+
+    .equip-info {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 18px;
+      flex: 1;
+    }
+
+    .equip-info .skill {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #f5e7c8;
+    }
+
+    .equip-info .target {
+      background: #2a3441;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #b8d0e0;
+    }
+
+    .equip-info .coins {
+      font-weight: 500;
+      color: #8a9eb0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .equip-info .coins::before {
+      content: "🪙";
+      font-size: 0.8rem;
+    }
+
+    .equip-info .current-badge {
+      background: #e6b422;
+      color: #1a1f2b;
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .equip-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #2e3e4e;
+      width: 100%;
+    }
+
+    .metric-item {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      background: #0f151d;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+    }
+
+    .metric-item.primary {
+      background: #2a1f0f;
+      border: 1px solid #e6b422;
+    }
+
+    .metric-item.primary .label {
+      color: #e6b422;
+    }
+
+    .metric-item.primary .value {
+      color: #ffd966;
+      font-size: 1.1rem;
+    }
+
+    .metric-item.highlight {
+      background: #1f2a3a;
+      border: 1px solid #5aa9e6;
+    }
+
+    .metric-item.highlight .label {
+      color: #5aa9e6;
+    }
+
+    .metric-item.highlight .value {
+      color: #7ec8ff;
+      font-size: 1.05rem;
+    }
+
+    .metric-item .label {
+      color: #8a9eb0;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .metric-item .value {
+      font-weight: 700;
+      color: #d6e2ed;
+    }
+
+    .metric-item .value.warning {
+      color: #f0a55a;
+    }
+
+    .equip-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    .edit-btn, .delete-btn, .save-btn, .cancel-btn, .calibrate-btn {
+      background: transparent;
+      border: 2px solid #3a4e62;
+      color: #8ab0d0;
+      border-radius: 40px;
+      width: 38px;
+      height: 38px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      line-height: 1;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .edit-btn:hover {
+      background: #1f3345;
+      border-color: #5aa9e6;
+      color: #7ec8ff;
+    }
+
+    .delete-btn {
+      border-color: #4a2e2e;
+      color: #d97a7a;
+    }
+
+    .delete-btn:hover {
+      background: #3a2020;
+      border-color: #b34e4e;
+      color: #ff9e9e;
+    }
+
+    .save-btn {
+      border-color: #2e5a3e;
+      color: #6ecf8e;
+    }
+
+    .save-btn:hover {
+      background: #1f3a28;
+      border-color: #4e9e66;
+      color: #8effa8;
+    }
+
+    .cancel-btn {
+      border-color: #4a3e2e;
+      color: #d9b87a;
+    }
+
+    .cancel-btn:hover {
+      background: #3a3020;
+      border-color: #b3924e;
+      color: #ffd98e;
+    }
+
+    .calibrate-btn {
+      border-color: #4e3e6e;
+      color: #b08ae6;
+    }
+
+    .calibrate-btn:hover {
+      background: #2e1f45;
+      border-color: #8a6ecf;
+      color: #d0b8ff;
+    }
+
+    .equip-card.editing .equip-info {
+      display: none;
+    }
+
+    .edit-form {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+      align-items: flex-end;
+    }
+
+    .equip-card.editing .edit-form {
+      display: flex;
+    }
+
+    .edit-form .input-group {
+      flex: 1 1 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .edit-form .input-group label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: #9aaec2;
+      padding-left: 4px;
+    }
+
+    .edit-form .input-group input {
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #f0e6d2;
+      outline: none;
+      width: 100%;
+    }
+
+    .edit-form .input-group input:focus {
+      border-color: #5aa9e6;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      background: #151c25;
+      border-radius: 24px;
+      color: #7a8e9e;
+      font-size: 0.95rem;
+      border: 1px dashed #2e3e4e;
+      margin-bottom: 10px;
+    }
+
+    .summary-panel {
+      background: #1e2632;
+      border-radius: 24px;
+      padding: 18px 16px;
+      border: 1px solid #34495e;
+      box-shadow: 0 6px 0 #0b0f14;
+      margin-top: 8px;
+    }
+
+    .summary-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #b0c4d9;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .summary-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .target-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .target-chip {
+      background: #0f151d;
+      border-radius: 30px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #3e5568;
+      font-size: 0.9rem;
+    }
+
+    .target-chip .name {
+      color: #b8d0e0;
+    }
+
+    .target-chip .count {
+      background: #e6b422;
+      color: #0e1219;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .target-empty {
+      color: #5e7285;
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    .notice {
+      font-size: 0.7rem;
+      text-align: center;
+      color: #4e6276;
+      margin-top: 24px;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-reset, .btn-share, .btn-import {
+      background: transparent;
+      border-radius: 40px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .btn-reset {
+      border: 2px solid #5a2e2e;
+      color: #d97a7a;
+    }
+
+    .btn-reset:hover {
+      background: #3a2020;
+      border-color: #b34e4e;
+      color: #ff9e9e;
+    }
+
+    .btn-share {
+      border: 2px solid #2e4a5a;
+      color: #7ab8d9;
+    }
+
+    .btn-share:hover {
+      background: #1a2e3a;
+      border-color: #4e8eb3;
+      color: #9ee0ff;
+    }
+
+    .btn-import {
+      border: 2px solid #2e5a3e;
+      color: #7acf8e;
+    }
+
+    .btn-import:hover {
+      background: #1a3a20;
+      border-color: #4e9e66;
+      color: #8effa8;
+    }
+
+    .btn-reset:active, .btn-share:active, .btn-import:active {
+      transform: scale(0.96);
+    }
+
+    .warning-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3a2e1a;
+      border: 2px solid #e6b422;
+      color: #f0e6d2;
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .warning-toast.show {
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      padding: 16px;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: #1e2632;
+      border-radius: 24px;
+      padding: 24px 20px;
+      max-width: 400px;
+      width: 100%;
+      border: 2px solid #3a4e62;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.show .modal-box {
+      transform: scale(1);
+    }
+
+    .modal-box h3 {
+      font-size: 1.2rem;
+      color: #f0e6d2;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .modal-box .modal-desc {
+      font-size: 0.85rem;
+      color: #9aaec2;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .modal-box .modal-desc strong {
+      color: #f0c45a;
+    }
+
+    .modal-box .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .modal-box .input-group label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #9aaec2;
+      padding-left: 4px;
+    }
+
+    .modal-box .input-group input {
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 14px;
+      padding: 14px 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #f0e6d2;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .modal-box .input-group input:focus {
+      border-color: #b08ae6;
+      box-shadow: 0 0 0 3px rgba(176, 138, 230, 0.2);
+    }
+
+    .modal-box .input-group textarea {
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 14px;
+      padding: 14px 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #f0e6d2;
+      outline: none;
+      width: 100%;
+      font-family: 'Courier New', monospace;
+      resize: vertical;
+      min-height: 100px;
+      word-break: break-all;
+    }
+
+    .modal-box .input-group textarea:focus {
+      border-color: #5aa9e6;
+      box-shadow: 0 0 0 3px rgba(90, 169, 230, 0.2);
+    }
+
+    .modal-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      background: #0f151d;
+      border: 2px solid #2e3e4e;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      user-select: none;
+    }
+
+    .modal-checkbox:hover {
+      border-color: #4e3e6e;
+    }
+
+    .modal-checkbox.checked {
+      border-color: #b08ae6;
+      background: #1a1528;
+    }
+
+    .modal-checkbox .checkbox-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid #4a5e72;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      font-size: 0.8rem;
+      color: transparent;
+      background: #0a0f14;
+    }
+
+    .modal-checkbox.checked .checkbox-icon {
+      background: #8a6ecf;
+      border-color: #b08ae6;
+      color: #fff;
+    }
+
+    .modal-checkbox .checkbox-label {
+      font-size: 0.9rem;
+      color: #b8d0e0;
+      font-weight: 500;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .modal-actions button {
+      border-radius: 14px;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.1s;
+      font-family: inherit;
+      border: none;
+    }
+
+    .modal-actions .btn-cancel {
+      background: transparent;
+      border: 2px solid #4a5e72;
+      color: #9aaec2;
+    }
+
+    .modal-actions .btn-cancel:hover {
+      background: #2a3441;
+    }
+
+    .modal-actions .btn-remove-cal {
+      background: transparent;
+      border: 2px solid #5a2e2e;
+      color: #d97a7a;
+    }
+
+    .modal-actions .btn-remove-cal:hover {
+      background: #3a2020;
+    }
+
+    .modal-actions .btn-confirm {
+      background: #8a6ecf;
+      color: #fff;
+      border: 2px solid #b08ae6;
+      box-shadow: 0 4px 0 #5a3e8f;
+    }
+
+    .modal-actions .btn-confirm:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #5a3e8f;
+    }
+
+    .modal-actions .btn-primary {
+      background: #5aa9e6;
+      color: #0e1219;
+      border: 2px solid #7ec8ff;
+      box-shadow: 0 4px 0 #3a7ea6;
+    }
+
+    .modal-actions .btn-primary:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3a7ea6;
+    }
+
+    .modal-actions .btn-success {
+      background: #4e9e66;
+      color: #fff;
+      border: 2px solid #6ecf8e;
+      box-shadow: 0 4px 0 #2e5a3e;
+    }
+
+    .modal-actions .btn-success:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #2e5a3e;
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <h1>
+    <span>⚔️</span> 炼化观星记录
+  </h1>
+
+  <div class="top-actions">
+    <button class="btn-share" id="shareBtn">📤 分享</button>
+    <button class="btn-import" id="importBtn">📥 读取</button>
+    <button class="btn-reset" id="resetBtn">🔄 重置全部</button>
+  </div>
+
+  <div class="params-panel">
+    <div class="param-row">
+      <div class="param-item">
+        <label>💰 当前金币数</label>
+        <input type="number" id="goldInput" value="99999999" min="0" step="100">
+      </div>
+      <div class="param-item">
+        <label>⚡ 每次炼化金币</label>
+        <input type="number" id="perRefineGold" value="4000" min="1" step="100">
+      </div>
+      <div class="param-item">
+        <label>⏱️ 每分钟炼化次数</label>
+        <input type="number" id="refinePerMinute" value="62" min="1" step="1">
+      </div>
+    </div>
+  </div>
+
+  <div class="add-section">
+    <div class="add-title">➕ 添加装备</div>
+    <div class="add-grid">
+      <div class="input-group">
+        <label>出技能时金币数</label>
+        <input type="number" id="addGold" placeholder="例如 12000" min="0" step="100">
+      </div>
+      <div class="input-group">
+        <label>技能名</label>
+        <input type="text" id="addSkill" placeholder="攻击 / 看破 ...">
+      </div>
+      <div class="input-group">
+        <label>目标装备</label>
+        <input type="text" id="addTarget" placeholder="堕天头/钢龙胸/原初手...">
+      </div>
+      <button class="btn-add" id="addBtn">➕ 添加</button>
+    </div>
+  </div>
+
+  <div class="list-header">
+    <h2>📋 炼化记录</h2>
+    <div class="stats-group">
+      <div class="stats-badge" id="totalMinutesBadge">总炼化 0秒</div>
+    </div>
+  </div>
+
+  <div class="equipment-list" id="equipmentList"></div>
+
+  <div class="summary-panel">
+    <div class="summary-title">🎯 目标装备统计</div>
+    <div class="summary-content">
+      <div class="target-list" id="targetStats">
+        <span class="target-empty">暂无数据</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice">📍 标记当前进度 · ✎ 编辑 · ✕ 删除 · 数据自动保存</div>
+</div>
+
+<div class="warning-toast" id="warningToast"></div>
+
+<!-- 校准弹窗 -->
+<div class="modal-overlay" id="calibrateModal">
+  <div class="modal-box">
+    <h3>📍 校准进度</h3>
+    <div class="modal-desc" id="calibrateDesc"></div>
+    <div class="input-group">
+      <label>当前实际金币数</label>
+      <input type="number" id="calibrateGoldInput" min="0" step="100" placeholder="输入金币数">
+    </div>
+    <div class="modal-checkbox" id="calibrateCheckbox">
+      <div class="checkbox-icon" id="calibrateCheckboxIcon">✓</div>
+      <div class="checkbox-label">减 2000（快速调整）</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-remove-cal" id="calibrateRemove" style="display:none;">取消校准</button>
+      <button class="btn-cancel" id="calibrateCancel">取消</button>
+      <button class="btn-confirm" id="calibrateConfirm">确认校准</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享弹窗 -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box">
+    <h3>📤 分享数据</h3>
+    <div class="modal-desc">
+      复制下方文字，发送到其他设备后点击「读取」导入。
+    </div>
+    <div class="input-group">
+      <label>分享码</label>
+      <textarea id="shareText" readonly></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="shareClose">关闭</button>
+      <button class="btn-primary" id="shareCopy">📋 复制</button>
+    </div>
+  </div>
+</div>
+
+<!-- 读取弹窗 -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <h3>📥 读取数据</h3>
+    <div class="modal-desc">
+      粘贴分享码，点击「导入」覆盖当前数据。
+    </div>
+    <div class="input-group">
+      <label>分享码</label>
+      <textarea id="importText" placeholder="粘贴分享码..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="importCancel">取消</button>
+      <button class="btn-success" id="importConfirm">导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const STORAGE_KEY = 'mh_refine_stargazing_v8';
+    const CHECKBOX_KEY = 'mh_calibrate_checkbox';
+    const DEFAULT_PARAMS = {
+      gold: 99999999,
+      perRefineGold: 4000,
+      refinePerMinute: 62
+    };
+    const CHECKBOX_DEDUCT = 2000;
+    const SHARE_PREFIX = 'MH1:';
+
+    let equipments = [];
+    let editingId = null;
+    let calibratingId = null;
+    let currentProgressId = null;
+    let checkboxChecked = false;
+
+    const goldInput = document.getElementById('goldInput');
+    const perRefineGoldInput = document.getElementById('perRefineGold');
+    const refinePerMinuteInput = document.getElementById('refinePerMinute');
+
+    const addGold = document.getElementById('addGold');
+    const addSkill = document.getElementById('addSkill');
+    const addTarget = document.getElementById('addTarget');
+    const addBtn = document.getElementById('addBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const importBtn = document.getElementById('importBtn');
+
+    const equipmentList = document.getElementById('equipmentList');
+    const totalMinutesBadge = document.getElementById('totalMinutesBadge');
+    const targetStats = document.getElementById('targetStats');
+    const warningToast = document.getElementById('warningToast');
+
+    const calibrateModal = document.getElementById('calibrateModal');
+    const calibrateGoldInput = document.getElementById('calibrateGoldInput');
+    const calibrateCancel = document.getElementById('calibrateCancel');
+    const calibrateConfirm = document.getElementById('calibrateConfirm');
+    const calibrateRemove = document.getElementById('calibrateRemove');
+    const calibrateDesc = document.getElementById('calibrateDesc');
+    const calibrateCheckbox = document.getElementById('calibrateCheckbox');
+    const calibrateCheckboxIcon = document.getElementById('calibrateCheckboxIcon');
+
+    const shareModal = document.getElementById('shareModal');
+    const shareText = document.getElementById('shareText');
+    const shareClose = document.getElementById('shareClose');
+    const shareCopy = document.getElementById('shareCopy');
+
+    const importModal = document.getElementById('importModal');
+    const importText = document.getElementById('importText');
+    const importCancel = document.getElementById('importCancel');
+    const importConfirm = document.getElementById('importConfirm');
+
+    let calibrateBaseDefault = 0;
+
+    function formatNumber(num) {
+      if (num === undefined || num === null || isNaN(num)) return '0';
+      return num.toLocaleString('en-US');
+    }
+
+    function formatDecimal(num, digits = 2) {
+      if (isNaN(num) || num === Infinity) return '∞';
+      return Number(num.toFixed(digits)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: digits });
+    }
+
+    function formatTime(minutes) {
+      if (isNaN(minutes) || minutes === Infinity) return '∞';
+      const totalSeconds = Math.round(minutes * 60);
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      let parts = [];
+      if (h > 0) parts.push(`${h}时`);
+      if (m > 0 || h > 0) parts.push(`${m}分`);
+      parts.push(`${s}秒`);
+      return parts.join('');
+    }
+
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    let toastTimer = null;
+    function showWarning(message, duration = 2500) {
+      warningToast.textContent = message;
+      warningToast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        warningToast.classList.remove('show');
+      }, duration);
+    }
+
+    function getParams() {
+      const baseGold = parseFloat(goldInput.value) || 0;
+      const perGold = parseFloat(perRefineGoldInput.value) || 1;
+      const perMinute = parseFloat(refinePerMinuteInput.value) || 1;
+      return {
+        baseGold: Math.max(0, baseGold),
+        perGold: Math.max(1, perGold),
+        perMinute: Math.max(1, perMinute)
+      };
+    }
+
+    function checkIntegerWarning(gold, baseGold, perGold) {
+      const pos = (baseGold - gold) / perGold;
+      if (Math.abs(pos - Math.round(pos)) > 1e-9) {
+        return pos;
+      }
+      return null;
+    }
+
+    function loadCheckboxState() {
+      try {
+        const saved = localStorage.getItem(CHECKBOX_KEY);
+        checkboxChecked = saved === 'true';
+      } catch (e) {
+        checkboxChecked = false;
+      }
+      updateCheckboxUI();
+    }
+
+    function saveCheckboxState() {
+      try {
+        localStorage.setItem(CHECKBOX_KEY, checkboxChecked ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    function updateCheckboxUI() {
+      if (checkboxChecked) {
+        calibrateCheckbox.classList.add('checked');
+        calibrateCheckboxIcon.textContent = '✓';
+      } else {
+        calibrateCheckbox.classList.remove('checked');
+        calibrateCheckboxIcon.textContent = '';
+      }
+    }
+
+    function applyCheckboxToInput() {
+      if (checkboxChecked) {
+        calibrateGoldInput.value = Math.max(0, calibrateBaseDefault - CHECKBOX_DEDUCT);
+      } else {
+        calibrateGoldInput.value = calibrateBaseDefault;
+      }
+    }
+
+    function exportData() {
+      const params = [
+        parseFloat(goldInput.value) || 0,
+        parseFloat(perRefineGoldInput.value) || 4000,
+        parseFloat(refinePerMinuteInput.value) || 62
+      ];
+
+      const eqs = equipments.map(eq => {
+        const arr = [eq.gold, eq.skill || '', eq.target || ''];
+        if (eq.calibratedGold !== undefined) {
+          arr.push(eq.calibratedGold);
+        } else {
+          arr.push(null);
+        }
+        return arr;
+      });
+
+      let progressIndex = -1;
+      if (currentProgressId) {
+        const sorted = [...equipments].sort((a, b) => b.gold - a.gold);
+        progressIndex = sorted.findIndex(e => e.id === currentProgressId);
+      }
+
+      const data = [params, eqs, progressIndex];
+
+      try {
+        const json = JSON.stringify(data);
+        const encoded = btoa(encodeURIComponent(json));
+        return SHARE_PREFIX + encoded;
+      } catch (e) {
+        return SHARE_PREFIX + 'ERROR';
+      }
+    }
+
+    function importData(str) {
+      if (!str || typeof str !== 'string') return false;
+      str = str.trim();
+      if (!str.startsWith(SHARE_PREFIX)) return false;
+
+      try {
+        const encoded = str.slice(SHARE_PREFIX.length);
+        const json = decodeURIComponent(atob(encoded));
+        const data = JSON.parse(json);
+
+        if (!Array.isArray(data) || data.length < 2) return false;
+
+        const params = data[0];
+        const eqs = data[1];
+        const progressIndex = data.length > 2 ? data[2] : -1;
+
+        if (Array.isArray(params)) {
+          if (params[0] !== undefined) goldInput.value = params[0];
+          if (params[1] !== undefined) perRefineGoldInput.value = params[1];
+          if (params[2] !== undefined) refinePerMinuteInput.value = params[2];
+        }
+
+        if (Array.isArray(eqs)) {
+          equipments = eqs.map((arr, idx) => {
+            const eq = {
+              id: 'import-' + idx + '-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+              gold: arr[0] || 0,
+              skill: arr[1] || '',
+              target: arr[2] || '',
+            };
+            if (arr[3] !== undefined && arr[3] !== null) {
+              eq.calibratedGold = arr[3];
+            }
+            return eq;
+          });
+        }
+
+        if (progressIndex >= 0) {
+          const sorted = [...equipments].sort((a, b) => b.gold - a.gold);
+          if (sorted[progressIndex]) {
+            currentProgressId = sorted[progressIndex].id;
+          } else {
+            currentProgressId = null;
+          }
+        } else {
+          currentProgressId = null;
+        }
+
+        return true;
+      } catch (e) {
+        console.warn('导入失败', e);
+        return false;
+      }
+    }
+
+    function computeMetrics(equipList, baseGold, perGold, perMinute) {
+      const result = [];
+      if (!equipList.length) return result;
+
+      const sorted = [...equipList].sort((a, b) => b.gold - a.gold);
+
+      let progressIndex = -1;
+      if (currentProgressId) {
+        progressIndex = sorted.findIndex(e => e.id === currentProgressId);
+      }
+
+      let calibrationGold = null;
+      let calibrationEqGold = null;
+      if (progressIndex >= 0) {
+        const progressEq = sorted[progressIndex];
+        if (progressEq.calibratedGold !== undefined) {
+          calibrationGold = progressEq.calibratedGold;
+          calibrationEqGold = progressEq.gold;
+        }
+      }
+
+      for (let i = 0; i < sorted.length; i++) {
+        const eq = sorted[i];
+        const isProgress = i === progressIndex;
+
+        const position = (baseGold - eq.gold) / perGold;
+
+        let stopGold;
+        let isCalibratedDisplay = false;
+
+        if (isProgress && calibrationGold !== null) {
+          stopGold = calibrationGold;
+          isCalibratedDisplay = true;
+        } else if (calibrationGold !== null && i > progressIndex) {
+          const dist = calibrationEqGold - eq.gold;
+          stopGold = calibrationGold - dist + perGold;
+        } else {
+          stopGold = eq.gold + perGold;
+        }
+
+        let refineCount;
+        if (i === 0) {
+          refineCount = Math.max(0, (baseGold - eq.gold) / perGold - 1);
+        } else {
+          const prevEq = sorted[i-1];
+          refineCount = Math.max(0, (prevEq.gold - eq.gold) / perGold - 1);
+        }
+
+        const minutes = refineCount / perMinute;
+
+        result.push({
+          ...eq,
+          stopGold,
+          refineCount,
+          minutes,
+          position,
+          isCurrent: isProgress,
+          isCalibratedDisplay,
+        });
+      }
+
+      return result;
+    }
+
+    function saveToStorage() {
+      try {
+        const data = {
+          equipments: equipments,
+          params: {
+            gold: goldInput.value,
+            perRefineGold: perRefineGoldInput.value,
+            refinePerMinute: refinePerMinuteInput.value
+          },
+          currentProgressId: currentProgressId
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (data.equipments && Array.isArray(data.equipments)) equipments = data.equipments;
+        if (data.params) {
+          if (data.params.gold !== undefined) goldInput.value = data.params.gold;
+          if (data.params.perRefineGold !== undefined) perRefineGoldInput.value = data.params.perRefineGold;
+          if (data.params.refinePerMinute !== undefined) refinePerMinuteInput.value = data.params.refinePerMinute;
+        }
+        if (data.currentProgressId) currentProgressId = data.currentProgressId;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function resetAll() {
+      if (!confirm('确定要重置所有数据吗？')) return;
+      goldInput.value = DEFAULT_PARAMS.gold;
+      perRefineGoldInput.value = DEFAULT_PARAMS.perRefineGold;
+      refinePerMinuteInput.value = DEFAULT_PARAMS.refinePerMinute;
+      equipments = [];
+      editingId = null;
+      calibratingId = null;
+      currentProgressId = null;
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      render();
+      showWarning('✅ 已重置', 1800);
+    }
+
+    function render() {
+      const { baseGold, perGold, perMinute } = getParams();
+      equipments.sort((a, b) => b.gold - a.gold);
+
+      const computedList = computeMetrics(equipments, baseGold, perGold, perMinute);
+
+      if (computedList.length === 0) {
+        equipmentList.innerHTML = `<div class="empty-state">✨ 还没有装备记录，点击上方添加</div>`;
+      } else {
+        let html = '';
+        computedList.forEach((item) => {
+          const isEditing = editingId === item.id;
+          const isCurrent = item.isCurrent;
+
+          const refineCountDisplay = Number.isInteger(item.refineCount)
+            ? item.refineCount.toLocaleString('en-US')
+            : item.refineCount.toFixed(1);
+
+          const positionDisplay = Number.isInteger(item.position)
+            ? item.position.toLocaleString('en-US')
+            : item.position.toFixed(1);
+
+          const isPositionNonInteger = Math.abs(item.position - Math.round(item.position)) > 1e-9;
+          const minutesDisplay = formatTime(item.minutes);
+
+          const stopGoldLabel = item.isCalibratedDisplay ? '校准金币' : '停止金币';
+
+          html += `
+            <div class="equip-card ${isEditing ? 'editing' : ''} ${isCurrent ? 'current' : ''}" data-id="${item.id}">
+              <div class="equip-info">
+                <span class="skill">${escapeHtml(item.skill) || '—'}</span>
+                ${item.target ? `<span class="target">${escapeHtml(item.target)}</span>` : ''}
+                <span class="coins">出技能金币 ${formatNumber(item.gold)}</span>
+                ${isCurrent ? '<span class="current-badge">📍 当前进度</span>' : ''}
+              </div>
+
+              <div class="edit-form">
+                <div class="input-group">
+                  <label>出技能时金币数</label>
+                  <input type="number" class="edit-gold" value="${item.gold}" min="0" step="100">
+                </div>
+                <div class="input-group">
+                  <label>技能名</label>
+                  <input type="text" class="edit-skill" value="${escapeHtml(item.skill)}">
+                </div>
+                <div class="input-group">
+                  <label>目标装备</label>
+                  <input type="text" class="edit-target" value="${escapeHtml(item.target)}" placeholder="可留空">
+                </div>
+              </div>
+
+              <div class="equip-actions">
+                ${isEditing ? `
+                  <button class="save-btn" data-id="${item.id}">✔</button>
+                  <button class="cancel-btn" data-id="${item.id}">✕</button>
+                ` : `
+                  <button class="calibrate-btn" data-id="${item.id}" title="标记当前进度">📍</button>
+                  <button class="edit-btn" data-id="${item.id}">✎</button>
+                  <button class="delete-btn" data-id="${item.id}">✕</button>
+                `}
+              </div>
+
+              <div class="equip-metrics">
+                <div class="metric-item primary">
+                  <span class="label">${stopGoldLabel}</span>
+                  <span class="value">${formatNumber(item.stopGold)}</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label">所在次数</span>
+                  <span class="value ${isPositionNonInteger ? 'warning' : ''}">${positionDisplay}${isPositionNonInteger ? ' ⚠️' : ''}</span>
+                </div>
+                <div class="metric-item highlight">
+                  <span class="label">停手次数</span>
+                  <span class="value">${refineCountDisplay} 次</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label">时间</span>
+                  <span class="value">${minutesDisplay}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        equipmentList.innerHTML = html;
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            editingId = e.currentTarget.dataset.id;
+            calibratingId = null;
+            render();
+          });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => deleteEquipmentById(e.currentTarget.dataset.id));
+        });
+
+        document.querySelectorAll('.save-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => saveEdit(e.currentTarget.dataset.id));
+        });
+
+        document.querySelectorAll('.cancel-btn').forEach(btn => {
+          btn.addEventListener('click', () => { editingId = null; render(); });
+        });
+
+        document.querySelectorAll('.calibrate-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => openCalibrateModal(e.currentTarget.dataset.id));
+        });
+      }
+
+      let totalMinutes = 0;
+      if (computedList.length > 0) {
+        const lastItem = computedList[computedList.length - 1];
+        totalMinutes = lastItem.position / perMinute;
+      }
+      totalMinutesBadge.textContent = `总炼化 ${formatTime(totalMinutes)}`;
+
+      const targetMap = new Map();
+      equipments.forEach(eq => {
+        const t = eq.target.trim() || '未分类';
+        targetMap.set(t, (targetMap.get(t) || 0) + 1);
+      });
+
+      if (targetMap.size === 0) {
+        targetStats.innerHTML = '<span class="target-empty">暂无数据</span>';
+      } else {
+        let chipsHtml = '';
+        const sortedTargets = Array.from(targetMap.entries()).sort((a, b) => b[1] - a[1]);
+        sortedTargets.forEach(([target, count]) => {
+          chipsHtml += `<div class="target-chip"><span class="name">${escapeHtml(target)}</span><span class="count">${count}</span></div>`;
+        });
+        targetStats.innerHTML = chipsHtml;
+      }
+
+      saveToStorage();
+    }
+
+    function deleteEquipmentById(id) {
+      equipments = equipments.filter(eq => eq.id !== id);
+      if (editingId === id) editingId = null;
+      if (currentProgressId === id) currentProgressId = null;
+      render();
+    }
+
+    function saveEdit(id) {
+      const card = document.querySelector(`.equip-card[data-id="${id}"]`);
+      if (!card) return;
+      const goldVal = parseFloat(card.querySelector('.edit-gold').value);
+      const skillVal = card.querySelector('.edit-skill').value.trim();
+      const targetVal = card.querySelector('.edit-target').value.trim();
+
+      if (isNaN(goldVal) || goldVal < 0) { alert('请输入有效的金币数（≥0）'); return; }
+
+      const eq = equipments.find(e => e.id === id);
+      if (eq) {
+        eq.gold = goldVal;
+        eq.skill = skillVal || '';
+        eq.target = targetVal || '';
+      }
+
+      const { baseGold, perGold } = getParams();
+      const warnPos = checkIntegerWarning(goldVal, baseGold, perGold);
+      if (warnPos !== null) {
+        showWarning(`⚠️ 所在次数为 ${warnPos.toFixed(1)}，不是整数，可能填错了金币数`, 3500);
+      }
+
+      editingId = null;
+      render();
+    }
+
+    function openCalibrateModal(id) {
+      const eq = equipments.find(e => e.id === id);
+      if (!eq) return;
+      calibratingId = id;
+      const isCurrent = currentProgressId === id;
+
+      const { baseGold, perGold } = getParams();
+
+      if (isCurrent && eq.calibratedGold !== undefined) {
+        calibrateDesc.innerHTML = `
+          即将校准：<strong>${escapeHtml(eq.skill) || '未命名'} ${eq.target ? '· ' + escapeHtml(eq.target) : ''}</strong><br>
+          出技能金币：${formatNumber(eq.gold)}<br><br>
+          此装备已是进度点，可修改校准金币或取消校准。
+        `;
+        calibrateBaseDefault = eq.calibratedGold;
+      } else {
+        const computed = computeMetrics(equipments, baseGold, perGold, 1);
+        const item = computed.find(c => c.id === id);
+        const defaultStopGold = item ? item.stopGold : (eq.gold + perGold);
+
+        calibrateDesc.innerHTML = `
+          即将校准：<strong>${escapeHtml(eq.skill) || '未命名'} ${eq.target ? '· ' + escapeHtml(eq.target) : ''}</strong><br>
+          出技能金币：${formatNumber(eq.gold)}<br><br>
+          输入当前实际金币数，将此装备设为进度点。<br>
+          校准后，此装备显示校准金币，之后的装备停止金币也会按新金币重新计算。
+        `;
+        calibrateBaseDefault = defaultStopGold;
+      }
+
+      loadCheckboxState();
+      applyCheckboxToInput();
+
+      calibrateRemove.style.display = isCurrent ? 'block' : 'none';
+      calibrateModal.classList.add('show');
+      setTimeout(() => calibrateGoldInput.focus(), 100);
+    }
+
+    function closeCalibrateModal() {
+      calibrateModal.classList.remove('show');
+      calibratingId = null;
+    }
+
+    function confirmCalibrate() {
+      const id = calibratingId;
+      if (!id) return;
+      const eq = equipments.find(e => e.id === id);
+      if (!eq) return;
+
+      const newGold = parseFloat(calibrateGoldInput.value);
+      if (isNaN(newGold) || newGold < 0) { alert('请输入有效的金币数（≥0）'); return; }
+
+      equipments.forEach(e => { if (e.calibratedGold !== undefined) delete e.calibratedGold; });
+
+      eq.calibratedGold = newGold;
+      currentProgressId = id;
+
+      closeCalibrateModal();
+      render();
+      showWarning(`📍 已标记「${eq.skill || '未命名'}」为当前进度`, 2500);
+    }
+
+    function removeCalibration() {
+      if (!currentProgressId) return;
+      const eq = equipments.find(e => e.id === currentProgressId);
+      if (eq) delete eq.calibratedGold;
+      currentProgressId = null;
+      closeCalibrateModal();
+      render();
+      showWarning('已取消校准', 2000);
+    }
+
+    function addEquipment() {
+      const goldVal = parseFloat(addGold.value);
+      const skillVal = addSkill.value.trim();
+      const targetVal = addTarget.value.trim();
+
+      if (isNaN(goldVal) || goldVal < 0) { alert('请输入有效的金币数（≥0）'); return; }
+
+      const { baseGold, perGold } = getParams();
+      const warnPos = checkIntegerWarning(goldVal, baseGold, perGold);
+      if (warnPos !== null) {
+        showWarning(`⚠️ 所在次数为 ${warnPos.toFixed(1)}，不是整数，可能填错了金币数`, 3500);
+      }
+
+      const id = Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+      equipments.push({ id, gold: goldVal, skill: skillVal || '', target: targetVal || '' });
+      addGold.value = '';
+      addSkill.value = '';
+      addTarget.value = '';
+      addGold.focus();
+      render();
+    }
+
+    function openShareModal() {
+      const code = exportData();
+      shareText.value = code;
+      shareModal.classList.add('show');
+      setTimeout(() => {
+        shareText.focus();
+        shareText.select();
+      }, 100);
+    }
+
+    function closeShareModal() {
+      shareModal.classList.remove('show');
+    }
+
+    function openImportModal() {
+      importText.value = '';
+      importModal.classList.add('show');
+      setTimeout(() => importText.focus(), 100);
+    }
+
+    function closeImportModal() {
+      importModal.classList.remove('show');
+    }
+
+    function doImport() {
+      const str = importText.value.trim();
+      if (!str) {
+        alert('请粘贴分享码');
+        return;
+      }
+      const success = importData(str);
+      if (success) {
+        closeImportModal();
+        render();
+        showWarning('✅ 导入成功', 2000);
+      } else {
+        alert('分享码无效，请检查后重试');
+      }
+    }
+
+    function setupParamListeners() {
+      [goldInput, perRefineGoldInput, refinePerMinuteInput].forEach(input => {
+        input.addEventListener('input', render);
+        input.addEventListener('change', render);
+      });
+    }
+
+    addBtn.addEventListener('click', addEquipment);
+    resetBtn.addEventListener('click', resetAll);
+    shareBtn.addEventListener('click', openShareModal);
+    importBtn.addEventListener('click', openImportModal);
+
+    [addGold, addSkill, addTarget].forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addEquipment(); }
+      });
+    });
+
+    calibrateCancel.addEventListener('click', closeCalibrateModal);
+    calibrateConfirm.addEventListener('click', confirmCalibrate);
+    calibrateRemove.addEventListener('click', removeCalibration);
+    calibrateModal.addEventListener('click', (e) => { if (e.target === calibrateModal) closeCalibrateModal(); });
+
+    calibrateCheckbox.addEventListener('click', () => {
+      checkboxChecked = !checkboxChecked;
+      updateCheckboxUI();
+      saveCheckboxState();
+      applyCheckboxToInput();
+    });
+
+    calibrateGoldInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmCalibrate(); }
+    });
+
+    shareClose.addEventListener('click', closeShareModal);
+    shareModal.addEventListener('click', (e) => { if (e.target === shareModal) closeShareModal(); });
+    shareCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shareText.value);
+        showWarning('📋 已复制到剪贴板', 1800);
+      } catch (e) {
+        shareText.select();
+        document.execCommand('copy');
+        showWarning('📋 已复制', 1800);
+      }
+    });
+
+    importCancel.addEventListener('click', closeImportModal);
+    importModal.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
+    importConfirm.addEventListener('click', doImport);
+
+    document.addEventListener('click', (e) => {
+      if (editingId && !e.target.closest('.equip-card')) { editingId = null; render(); }
+    });
+
+    function init() {
+      setupParamListeners();
+      loadCheckboxState();
+      loadFromStorage();
+      render();
+    }
+
+    init();
+
+    // 注册 Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+  })();
+</script>
+</body>
+</html>
