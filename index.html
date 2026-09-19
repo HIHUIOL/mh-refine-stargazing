@@ -1087,7 +1087,7 @@
     </div>
     <div class="modal-checkbox" id="calibrateCheckbox">
       <div class="checkbox-icon" id="calibrateCheckboxIcon">✓</div>
-      <div class="checkbox-label">减 2000（快速调整）</div>
+      <div class="checkbox-label">减 6000（快速调整）</div>
     </div>
     <div class="modal-actions">
       <button class="btn-remove-cal" id="calibrateRemove" style="display:none;">取消校准</button>
@@ -1186,7 +1186,7 @@
         <li>停手次数和所在次数不受影响，保持稳定</li>
         <li>再点另一件的 📍，会自动取消之前的校准</li>
       </ul>
-      <p>弹窗里有个「减 2000」的勾选框，勾上后输入框默认值会减 2000，方便快速调整。勾选状态会记住。</p>
+      <p>弹窗里有个「减 6000」的勾选框，勾上后输入框默认值会减 6000，方便快速调整。勾选状态会记住。</p>
     </div>
 
     <div class="help-divider"></div>
@@ -1227,7 +1227,7 @@
       perRefineGold: 4000,
       refinePerMinute: 62
     };
-    const CHECKBOX_DEDUCT = 2000;
+    const CHECKBOX_DEDUCT = 6000;
     const SHARE_PREFIX = 'MH1:';
 
     let equipments = [];
@@ -1792,7 +1792,6 @@
 
       calibrateRemove.style.display = isCurrent ? 'block' : 'none';
       calibrateModal.classList.add('show');
-      // 不自动聚焦，避免手机弹键盘
     }
 
     function closeCalibrateModal() {
@@ -1855,7 +1854,6 @@
       const code = exportData();
       shareText.value = code;
       shareModal.classList.add('show');
-      // 不自动聚焦
     }
 
     function closeShareModal() {
@@ -1865,7 +1863,6 @@
     function openImportModal() {
       importText.value = '';
       importModal.classList.add('show');
-      // 不自动聚焦
     }
 
     function closeImportModal() {
